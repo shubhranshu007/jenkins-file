@@ -1,0 +1,32 @@
+pipeline {
+    agent any
+
+    environment {
+        AWS_REGION = "ap-south-1"
+        CLUSTER_NAME = "eks-cluster"
+
+        
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git branch: 'nginx', credentialsId: 'd5018247-d67f-4952-8c65-e2118e34c072', url: 'https://github.com/shubhranshu007/nginx-helm-chart.git'
+                }
+        }
+        
+        stage('awws configure') {
+            steps {
+                withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: 'aws_cred', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                    sh '''
+                    aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
+                    helm ls
+                    helm install nginx-app nginx-chart/
+                    kubectl get pods
+                    '''
+                }
+            }
+        }
+        
+    }
+}
